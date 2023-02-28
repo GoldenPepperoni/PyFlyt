@@ -22,8 +22,14 @@ register(
     entry_point="PyFlyt.gym_envs.fixedwing_envs.fixedwing_waypoints_env:FixedwingWaypointsEnv",
 )
 
+register(
+    id="PyFlyt/Fixedwing-DubinsPath-v0",
+    entry_point="PyFlyt.gym_envs.fixedwing_envs.fixedwing_dubins_path_env:FixedwingDubinsPathEnv",
+)
+
 # Rocket Envs
 register(
     id="PyFlyt/Rocket-Landing-v0",
     entry_point="PyFlyt.gym_envs.rocket_envs.rocket_landing_env:RocketLandingEnv",
 )
+

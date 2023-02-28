@@ -19,6 +19,7 @@ class Aviary(bullet_client.BulletClient):
         self,
         start_pos: np.ndarray,
         start_orn: np.ndarray,
+        cameraTargetPosition: np.ndarray,
         render: bool = False,
         physics_hz: int = 240,
         ctrl_hz: int = 120,
@@ -76,6 +77,8 @@ class Aviary(bullet_client.BulletClient):
         self.camera_FOV = camera_FOV_degrees
         self.camera_frame_size = camera_resolution
         self.worldScale = worldScale
+        self.cameraTargetPosition = cameraTargetPosition
+
 
         # directories and paths
         self.model_dir = model_dir
@@ -101,7 +104,7 @@ class Aviary(bullet_client.BulletClient):
             cameraDistance=5,
             cameraYaw=30,
             cameraPitch=-30,
-            cameraTargetPosition=[0, 0, 1],
+            cameraTargetPosition=self.cameraTargetPosition,
         )
         if not self.use_camera:
             self.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
