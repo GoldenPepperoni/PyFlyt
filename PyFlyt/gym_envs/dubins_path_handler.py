@@ -155,7 +155,8 @@ class DubinsPathHandler:
             for i in range(0, len(self.path)-1):
                 p.addUserDebugLine(self.path[i], self.path[i+1], lifeTime=0)
 
-        
+        return self.path
+
 
     def get_carrot(
         self,
@@ -276,3 +277,10 @@ class DubinsPathHandler:
 
     def all_targets_reached(self):
         return len(self.targets) == 0
+    
+    def path_end_reached(self):
+        # NOT FOR RL USE
+        if self.closest_idx == (len(self.path)-1):
+            return True
+        else:
+            return False

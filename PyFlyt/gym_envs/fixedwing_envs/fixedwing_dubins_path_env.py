@@ -102,7 +102,8 @@ class FixedwingDubinsPathEnv(FixedwingBaseEnv):
             options:
         """
         super().begin_reset(seed, options, aviary_options)
-        self.dubinspath.reset()
+        self.path = self.dubinspath.reset()
+        self.info["path"] = self.path
         self.info["num_targets_reached"] = 0
         self.distance_to_immediate = np.inf
         super().end_reset()
@@ -167,4 +168,11 @@ class FixedwingDubinsPathEnv(FixedwingBaseEnv):
             # update infos and dones
             self.truncation |= self.dubinspath.all_targets_reached()
             self.info["env_complete"] = self.dubinspath.all_targets_reached()
+            self.info["num_targets_reached"] = self.dubinspath.num_targets_reached()
+
+        if self.dubinspath.path_end_reached():
+            # NOT FOR RL USE, COMMENT THIS BLOCK FOR RL USAGE
+            # update infos and dones
+            self.truncation |= True
+            self.info["env_complete"] = True
             self.info["num_targets_reached"] = self.dubinspath.num_targets_reached()
