@@ -6,7 +6,7 @@ import os
 import numpy as np
 import pybullet as p
 
-from PythonRobotics.PathPlanning.DubinsPath.dubins_path_planner import plan_dubins_path
+from dubins_path_planner import plan_dubins_path
 
 
 class DubinsPathHandler:
