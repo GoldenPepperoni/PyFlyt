@@ -33,6 +33,8 @@ class FixedwingDubinsPathEnv(FixedwingBaseEnv):
         path_step_size : float = 0.5, 
         max_duration_seconds: float = 120.0,
         angle_representation: str = "quaternion",
+        custom_targets: np.ndarray = None,
+        custom_yaw_targets: np.ndarray = None,
         agent_hz: int = 30,
         render_mode: None | str = None,
     ):
@@ -69,6 +71,8 @@ class FixedwingDubinsPathEnv(FixedwingBaseEnv):
             flight_dome_size=flight_dome_size,
             turning_radius=turning_radius,
             path_step_size=path_step_size,
+            custom_targets=custom_targets,
+            custom_yaw_targets=custom_yaw_targets,
             start_pos=self.start_pos,
             np_random=self.np_random,
         )
@@ -159,16 +163,17 @@ class FixedwingDubinsPathEnv(FixedwingBaseEnv):
             self.reward += 1.0 / self.distance_to_immediate
 
         # target reached
-        if self.dubinspath.target_reached():
-            self.reward = 100.0
+        # if self.dubinspath.target_reached():
+        #     # ONLY FOR RL USE, UNCOMMENT THIS BLOCK FOR RL USE
+        #     self.reward = 100.0
 
-            # advance the targets
-            self.dubinspath.advance_targets()
+        #     # advance the targets
+        #     self.dubinspath.advance_targets()
 
-            # update infos and dones
-            self.truncation |= self.dubinspath.all_targets_reached()
-            self.info["env_complete"] = self.dubinspath.all_targets_reached()
-            self.info["num_targets_reached"] = self.dubinspath.num_targets_reached()
+        #     # update infos and dones
+        #     self.truncation |= self.dubinspath.all_targets_reached()
+        #     self.info["env_complete"] = self.dubinspath.all_targets_reached()
+        #     self.info["num_targets_reached"] = self.dubinspath.num_targets_reached()
 
         if self.dubinspath.path_end_reached():
             # NOT FOR RL USE, COMMENT THIS BLOCK FOR RL USAGE

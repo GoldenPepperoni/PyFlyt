@@ -22,6 +22,8 @@ class DubinsPathHandler:
         path_step_size: float,
         start_pos: np.ndarray,
         np_random: np.random.Generator,
+        custom_targets: np.ndarray = None,
+        custom_yaw_targets: np.ndarray = None,
     ):
         # constants
         self.enable_render = enable_render
@@ -32,6 +34,8 @@ class DubinsPathHandler:
         self.flight_dome_size = flight_dome_size
         self.turning_radius = turning_radius
         self.path_step_size = path_step_size
+        self.custom_targets = custom_targets
+        self.custom_yaw_targets = custom_yaw_targets
         self.start_pos = start_pos
         self.np_random = np_random
 
@@ -47,22 +51,30 @@ class DubinsPathHandler:
         # reset the error
         self.new_distance = 0.0
         self.old_distance = 0.0
-
-        # we sample from polar coordinates to generate linear targets
         self.targets = np.zeros(shape=(self.num_targets, 3))
-        thts = self.np_random.uniform(0.0, 2.0 * math.pi, size=(self.num_targets,))
-        phis = self.np_random.uniform(0.0, 2.0 * math.pi, size=(self.num_targets,))
-        for i, tht, phi in zip(range(self.num_targets), thts, phis):
-            dist = self.np_random.uniform(low=1.0, high=self.flight_dome_size * 0.9)
-            x = dist * math.sin(phi) * math.cos(tht)
-            y = dist * math.sin(phi) * math.sin(tht)
-            z = self.np_random.uniform(10, 30)
 
-            # check for floor of z
-            self.targets[i] = np.array([x, y, z if z > 0.1 else 0.1])
+        if self.custom_targets is not None:
+            # Raise error
+            if (np.shape(self.custom_targets)[0] != np.shape(self.custom_yaw_targets)[0]):
+                raise Exception("Custom targets and yaw targets must have same number!")
+            
+            self.targets = self.custom_targets
+            self.yaw_targets = self.custom_yaw_targets
 
-        # yaw targets (Must be true for Dubins path)
-        if self.use_yaw_targets:
+        else:
+            # we sample from polar coordinates to generate random linear targets
+            thts = self.np_random.uniform(0.0, 2.0 * math.pi, size=(self.num_targets,))
+            phis = self.np_random.uniform(0.0, 2.0 * math.pi, size=(self.num_targets,))
+            for i, tht, phi in zip(range(self.num_targets), thts, phis):
+                dist = self.np_random.uniform(low=1.0, high=self.flight_dome_size * 0.9)
+                x = dist * math.sin(phi) * math.cos(tht)
+                y = dist * math.sin(phi) * math.sin(tht)
+                z = self.np_random.uniform(10, 30)
+
+                # check for floor of z
+                self.targets[i] = np.array([x, y, z if z > 0.1 else 0.1])
+
+
             self.yaw_targets = self.np_random.uniform(
                 low=-math.pi, high=math.pi, size=(self.num_targets,)
             )
@@ -86,7 +98,7 @@ class DubinsPathHandler:
         s_z = self.start_pos[0][2]
         g_z = self.targets[0][2]
 
-        # Get X and Y path coordinates (20 cm step)
+        # Get X and Y path coordinates
         x, y, yaw, mode, path_lens = plan_dubins_path(s_x, s_y, s_yaw, g_x, g_y, g_yaw, curvature, step_size=self.path_step_size/self.turning_radius)
         z = np.linspace(s_z, g_z, num=len(x))
 
@@ -105,7 +117,6 @@ class DubinsPathHandler:
 
             s_yaw = self.yaw_targets[sect]
             g_yaw = self.yaw_targets[sect+1]
-
 
             # Get Z path coordinates
             s_z = self.targets[sect][2]
