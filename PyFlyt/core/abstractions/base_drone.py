@@ -85,7 +85,7 @@ class DroneClass(ABC):
         By default, mode 0 defines the following setpoint behaviour:
         Mode 0 - [Pitch, Roll, Yaw, Thrust]
         """
-        if (mode != 0) and (mode not in self.registered_controllers.keys()):
+        if (mode != 0) and (mode not in self.registered_controllers.keys()=):
             raise ValueError(
                 f"`mode` must be either 0 or be registered in {self.registered_controllers.keys()}, got {mode}."
             )
