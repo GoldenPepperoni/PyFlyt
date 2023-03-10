@@ -150,10 +150,10 @@ class LiftingSurface:
         assert lifting_vector.shape == (3,)
         assert forward_vector.shape == (3,)
         if np.linalg.norm(lifting_vector) != 1.0:
-            warnings.warn(f"Norm of `{lifting_vector=}` is not 1.0, normalizing...")
+            warnings.warn(f"Norm of `{lifting_vector}` is not 1.0, normalizing...")
             lifting_vector /= np.linalg.norm(lifting_vector)
         if np.linalg.norm(forward_vector) != 1.0:
-            warnings.warn(f"Norm of `{forward_vector=}` is not 1.0, normalizing...")
+            warnings.warn(f"Norm of `{forward_vector}` is not 1.0, normalizing...")
             forward_vector /= np.linalg.norm(forward_vector)
         if np.dot(lifting_vector, forward_vector) != 0.0:
             warnings.warn(
