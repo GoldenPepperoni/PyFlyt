@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from abc import ABC, abstractmethod
 
@@ -85,7 +87,7 @@ class DroneClass(ABC):
         """
         if (mode != 0) and (mode not in self.registered_controllers.keys()):
             raise ValueError(
-                f"`mode` must be either 0 or be registered in {self.registered_controllers.keys()=}, got {mode}."
+                f"`mode` must be either 0 or be registered in {self.registered_controllers.keys()}, got {mode}."
             )
 
         self.mode = mode
