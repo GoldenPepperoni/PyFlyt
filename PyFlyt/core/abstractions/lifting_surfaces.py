@@ -45,7 +45,7 @@ class LiftingSurfaces:
         """
         assert np.all(cmd >= -1.0) and np.all(
             cmd <= 1.0
-        ), f"`{cmd=} has values out of bounds of -1.0 and 1.0.`"
+        ), f"`{cmd} has values out of bounds of -1.0 and 1.0.`"
 
         for surface in self.surfaces:
             actuation = (
