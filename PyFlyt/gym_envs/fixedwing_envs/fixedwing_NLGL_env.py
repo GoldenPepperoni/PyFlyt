@@ -31,6 +31,7 @@ class FixedwingNLGLDubinsPathEnv(FixedwingBaseEnv):
         flight_dome_size: float = 200.0,
         turning_radius : float = 40,
         path_step_size : float = 0.5, 
+        NLGL_L1 : float = 11.5,
         max_duration_seconds: float = 120.0,
         angle_representation: str = "quaternion",
         custom_targets: np.ndarray = None,
@@ -98,6 +99,9 @@ class FixedwingNLGLDubinsPathEnv(FixedwingBaseEnv):
         """ ENVIRONMENT CONSTANTS """
         self.sparse_reward = sparse_reward
 
+        """NLGL parameters"""
+        self.NLGL_L1 = NLGL_L1
+
     def reset(self, seed=None, options=None, aviary_options=dict()):
         """reset.
 
@@ -149,7 +153,7 @@ class FixedwingNLGLDubinsPathEnv(FixedwingBaseEnv):
             np.linalg.norm(new_state["target_deltas"][0])
         )
         
-        new_state["carrot_pos"] = self.dubinspath.get_NLGL_carrot(lin_pos, 11.5)
+        new_state["carrot_pos"] = self.dubinspath.get_NLGL_carrot(lin_pos, self.NLGL_L1)
 
         self.state = new_state
 

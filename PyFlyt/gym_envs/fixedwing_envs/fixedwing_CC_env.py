@@ -31,6 +31,7 @@ class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
         flight_dome_size: float = 200.0,
         turning_radius : float = 40,
         path_step_size : float = 0.5, 
+        CC_lookahead : float = 11.5,
         max_duration_seconds: float = 120.0,
         angle_representation: str = "quaternion",
         custom_targets: np.ndarray = None,
@@ -98,6 +99,9 @@ class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
         """ ENVIRONMENT CONSTANTS """
         self.sparse_reward = sparse_reward
 
+        """Carrot Chasing parameters"""
+        self.CC_lookahead = CC_lookahead
+
     def reset(self, seed=None, options=None, aviary_options=dict()):
         """reset.
 
@@ -149,7 +153,7 @@ class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
             np.linalg.norm(new_state["target_deltas"][0])
         )
 
-        new_state["carrot_pos"] = self.dubinspath.get_CC_carrot(lin_pos, 11.5)
+        new_state["carrot_pos"] = self.dubinspath.get_CC_carrot(lin_pos, self.CC_lookahead)
 
         self.state = new_state
 
