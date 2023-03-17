@@ -198,10 +198,14 @@ class DubinsPathHandler:
         # Get closest point and calculate cross track error d
         self._get_closest_point(lin_pos) 
 
+        # If cross track error > L1, means no reference point possible. Fast forward to end episode
+        if self.cross_track_error > L1:
+            self.closest_idx = (len(self.path)-1)
+            return [0.0, 0.0, 0.0]
+        
         # Calculate lookahead distance using Pythagoras' theorem (Assume small curvature)
         # a = cross track error, b = lookahead distance, c = L1
         lookahead = np.sqrt(np.square(L1) - np.square(self.cross_track_error))
-
         lookahead = lookahead / self.path_step_size # convert into idx (0.5m step)
         
         try:
@@ -231,7 +235,7 @@ class DubinsPathHandler:
                 pass
 
         self.closest_idx = idx_list[np.argmin(cross_track_error)]
-        self.cross_track_error = cross_track_error[self.closest_idx]
+        self.cross_track_error = np.amin(cross_track_error)
 
         if self.enable_render:
             # Red line
