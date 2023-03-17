@@ -47,6 +47,7 @@ class DubinsPathHandler:
         """TARGET GENERATION"""
         # reset carrot position
         self.carrot = [0, 0, 0]
+        self.cross_track_error = 0.0
 
         # reset the error
         self.new_distance = 0.0
@@ -169,10 +170,10 @@ class DubinsPathHandler:
         return self.path
 
 
-    def get_carrot(
+    def get_CC_carrot(
         self,
         lin_pos: np.ndarray,
-        lookahead: int
+        lookahead: float
     ):
 
         lookahead = lookahead / self.path_step_size # convert into idx (0.5m step)
@@ -188,6 +189,30 @@ class DubinsPathHandler:
         
         return self.carrot
 
+    def get_NLGL_carrot(
+        self,
+        lin_pos: np.ndarray,
+        L1: float
+    ):
+
+        # Get closest point and calculate cross track error d
+        self._get_closest_point(lin_pos) 
+
+        # Calculate lookahead distance using Pythagoras' theorem (Assume small curvature)
+        # a = cross track error, b = lookahead distance, c = L1
+        lookahead = np.sqrt(np.square(L1) - np.square(self.cross_track_error))
+
+        lookahead = lookahead / self.path_step_size # convert into idx (0.5m step)
+        
+        try:
+            self.carrot = self.path[int(self.closest_idx+lookahead)]
+        except:
+            self.carrot = self.path[-1]
+
+        if self.enable_render:
+            p.resetBasePositionAndOrientation(self.carrotid, self.carrot, [1, 1, 1, 1])
+        
+        return self.carrot
 
     def _get_closest_point(
         self,
@@ -206,6 +231,7 @@ class DubinsPathHandler:
                 pass
 
         self.closest_idx = idx_list[np.argmin(cross_track_error)]
+        self.cross_track_error = cross_track_error[self.closest_idx]
 
         if self.enable_render:
             # Red line

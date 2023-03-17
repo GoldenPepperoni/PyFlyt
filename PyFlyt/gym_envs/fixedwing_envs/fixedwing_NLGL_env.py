@@ -9,7 +9,7 @@ from .fixedwing_base_env import FixedwingBaseEnv
 
 class FixedwingDubinsPathEnv(FixedwingBaseEnv):
     """
-    Simple Waypoint Environment
+    Generates a Dubins path for Non-Linear Guidance Law (NLGL) Path Following Algorithm
 
     Actions are vp, vq, vr, T, ie: angular rates and thrust
 
@@ -149,7 +149,11 @@ class FixedwingDubinsPathEnv(FixedwingBaseEnv):
             np.linalg.norm(new_state["target_deltas"][0])
         )
 
-        new_state["carrot_pos"] = self.dubinspath.get_carrot(lin_pos, 11.5)
+
+
+
+        
+        new_state["carrot_pos"] = self.dubinspath.get_CC_carrot(lin_pos, 11.5)
 
         self.state = new_state
 
