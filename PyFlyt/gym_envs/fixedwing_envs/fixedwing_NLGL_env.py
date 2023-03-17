@@ -148,12 +148,8 @@ class FixedwingDubinsPathEnv(FixedwingBaseEnv):
         self.distance_to_immediate = float(
             np.linalg.norm(new_state["target_deltas"][0])
         )
-
-
-
-
         
-        new_state["carrot_pos"] = self.dubinspath.get_CC_carrot(lin_pos, 11.5)
+        new_state["carrot_pos"] = self.dubinspath.get_NLGL_carrot(lin_pos, 11.5)
 
         self.state = new_state
 

@@ -149,7 +149,7 @@ class FixedwingDubinsPathEnv(FixedwingBaseEnv):
             np.linalg.norm(new_state["target_deltas"][0])
         )
 
-        new_state["carrot_pos"] = self.dubinspath.get_carrot(lin_pos, 11.5)
+        new_state["carrot_pos"] = self.dubinspath.get_CC_carrot(lin_pos, 11.5)
 
         self.state = new_state
 
