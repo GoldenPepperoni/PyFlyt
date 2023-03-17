@@ -23,8 +23,13 @@ register(
 )
 
 register(
-    id="PyFlyt/Fixedwing-DubinsPath-v0",
-    entry_point="PyFlyt.gym_envs.fixedwing_envs.fixedwing_dubins_path_env:FixedwingDubinsPathEnv",
+    id="PyFlyt/Fixedwing-CCDubinsPath-v0",
+    entry_point="PyFlyt.gym_envs.fixedwing_envs.fixedwing_dubins_path_env:FixedwingCCDubinsPathEnv",
+)
+
+register(
+    id="PyFlyt/Fixedwing-NLGLDubinsPath-v0",
+    entry_point="PyFlyt.gym_envs.fixedwing_envs.fixedwing_dubins_path_env:FixedwingNLGLDubinsPathEnv",
 )
 
 # Rocket Envs

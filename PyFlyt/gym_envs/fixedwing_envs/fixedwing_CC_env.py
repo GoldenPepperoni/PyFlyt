@@ -7,7 +7,7 @@ from ..dubins_path_handler import DubinsPathHandler
 from .fixedwing_base_env import FixedwingBaseEnv
 
 
-class FixedwingDubinsPathEnv(FixedwingBaseEnv):
+class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
     """
     Generates a Dubins path for Carrot Chasing Path Following Algorithm
 

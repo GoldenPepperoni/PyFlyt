@@ -7,7 +7,7 @@ from ..dubins_path_handler import DubinsPathHandler
 from .fixedwing_base_env import FixedwingBaseEnv
 
 
-class FixedwingDubinsPathEnv(FixedwingBaseEnv):
+class FixedwingNLGLDubinsPathEnv(FixedwingBaseEnv):
     """
     Generates a Dubins path for Non-Linear Guidance Law (NLGL) Path Following Algorithm
 
