@@ -156,16 +156,23 @@ class DubinsPathHandler:
                         self.targ_obj_dir,
                         basePosition=self.carrot,
                         useFixedBase=True,
-                        globalScaling=self.goal_reach_distance / 4.0,
+                        globalScaling=self.goal_reach_distance / 3.0,
                     )
             p.changeVisualShape(self.carrotid, linkIndex=-1, rgbaColor=(1, 0, 0, 1))
 
-            # Cast initial ray for cross track distance
-            self.rayid = p.addUserDebugLine([0, 0, 0], [0, 0, 0])
+            # Cast initial ray for cross track distance and to carrot
+            self.d_rayid = p.addUserDebugLine([0, 0, 0], [0, 0, 0])
+            self.c_rayid = p.addUserDebugLine([0, 0, 0], [0, 0, 0])
 
             # Draw path
             for i in range(0, len(self.path)-1):
-                p.addUserDebugLine(self.path[i], self.path[i+1], lifeTime=0)
+                self.pathsid = p.loadURDF(
+                            self.targ_obj_dir,
+                            basePosition=self.path[i],
+                            useFixedBase=True,
+                            globalScaling=self.goal_reach_distance / 30.0,
+                        )
+                p.changeVisualShape(self.pathsid, linkIndex=-1, rgbaColor=(0, 0, 0, 1))
 
         return self.path
 
@@ -215,6 +222,11 @@ class DubinsPathHandler:
 
         if self.enable_render:
             p.resetBasePositionAndOrientation(self.carrotid, self.carrot, [1, 1, 1, 1])
+            # Red line
+            self.d_rayid = p.addUserDebugLine(lin_pos, self.path[self.closest_idx], lineColorRGB=[1, 0, 0], replaceItemUniqueId=self.d_rayid)
+            # Blue line
+            self.c_rayid = p.addUserDebugLine(lin_pos, self.carrot, lineColorRGB=[0, 0, 1], replaceItemUniqueId=self.c_rayid)
+
         
         return self.carrot
 
@@ -236,11 +248,6 @@ class DubinsPathHandler:
 
         self.closest_idx = idx_list[np.argmin(cross_track_error)]
         self.cross_track_error = np.amin(cross_track_error)
-
-        if self.enable_render:
-            # Red line
-            self.rayid = p.addUserDebugLine(lin_pos, self.path[self.closest_idx], lineColorRGB=[1, 0, 0], replaceItemUniqueId=self.rayid)
-        
 
 
     def distance_to_target(
