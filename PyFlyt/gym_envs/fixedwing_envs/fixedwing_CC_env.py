@@ -5,6 +5,7 @@ from gymnasium import spaces
 
 from ..dubins_path_handler import DubinsPathHandler
 from .fixedwing_base_env import FixedwingBaseEnv
+import pybullet as p
 
 
 class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
@@ -38,7 +39,9 @@ class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
         custom_yaw_targets: np.ndarray = None,
         agent_hz: int = 30,
         render_mode: None | str = None,
-    ):
+        spawn_pos: np.ndarray = np.array([[0.0, 0.0, 10.0]]),
+        spawn_orn: np.ndarray = np.array([[0.0, 0.0, 0.0]]),
+        ):
         """__init__.
 
         Args:
@@ -52,7 +55,8 @@ class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
         """
 
         super().__init__(
-            start_pos=np.array([[0.0, 0.0, 10.0]]),
+            start_pos=spawn_pos,
+            start_orn=spawn_orn,
             drone_type="fixedwing",
             drone_model="fixedwing",
             flight_dome_size=flight_dome_size,
@@ -74,7 +78,7 @@ class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
             path_step_size=path_step_size,
             custom_targets=custom_targets,
             custom_yaw_targets=custom_yaw_targets,
-            start_pos=self.start_pos,
+            start_pos=np.array([[0.0, 0.0, 10.0]]), # Hardcoded to start from origin
             np_random=self.np_random,
         )
 
@@ -98,6 +102,9 @@ class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
 
         """ ENVIRONMENT CONSTANTS """
         self.sparse_reward = sparse_reward
+        self.spawn_pos = spawn_pos
+        self.spawn_orn = spawn_orn
+
 
         """Carrot Chasing parameters"""
         self.CC_lookahead = CC_lookahead
