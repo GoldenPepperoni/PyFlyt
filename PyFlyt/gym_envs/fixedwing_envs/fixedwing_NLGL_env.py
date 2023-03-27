@@ -159,7 +159,8 @@ class FixedwingNLGLDubinsPathEnv(FixedwingBaseEnv):
         )
         
         new_state["carrot_pos"] = self.dubinspath.get_NLGL_carrot(lin_pos, self.NLGL_L1)
-
+        new_state["cross_track_err"] = self.dubinspath.cross_track_error
+        
         self.state = new_state
 
     def compute_term_trunc_reward(self):

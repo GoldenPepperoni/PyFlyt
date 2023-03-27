@@ -161,6 +161,7 @@ class FixedwingCCDubinsPathEnv(FixedwingBaseEnv):
         )
 
         new_state["carrot_pos"] = self.dubinspath.get_CC_carrot(lin_pos, self.CC_lookahead)
+        new_state["cross_track_err"] = self.dubinspath.cross_track_error
 
         self.state = new_state
 
