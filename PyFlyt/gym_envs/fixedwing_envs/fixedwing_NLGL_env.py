@@ -96,7 +96,7 @@ class FixedwingNLGLDubinsPathEnv(FixedwingBaseEnv):
                 "carrot_pos": spaces.Box(
                     low=-np.inf, high=np.inf, shape=(3,), dtype=np.float64
                 ),
-                "cross_track_error": spaces.Box(
+                "cross_track_err": spaces.Box(
                     low=-np.inf, high=np.inf, shape=(1,), dtype=np.float64
                 ),
             }
