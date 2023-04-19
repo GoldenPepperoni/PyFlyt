@@ -34,7 +34,7 @@ class RocketLandingEnv(RocketBaseEnv):
         max_displacement: float = 200.0,
         max_duration_seconds: float = 30.0,
         angle_representation: str = "quaternion",
-        agent_hz: int = 40,
+        agent_hz: int = 30,
         render_mode: None | str = None,
         render_resolution: tuple[int, int] = (480, 480),
     ):
@@ -89,6 +89,8 @@ class RocketLandingEnv(RocketBaseEnv):
             seed: int
             options: None
         """
+
+        self.t = 0
         options = dict(randomize_drop=True, accelerate_drop=True)
         drone_options = dict(starting_fuel_ratio=0.01)
 
@@ -144,7 +146,6 @@ class RocketLandingEnv(RocketBaseEnv):
             quarternion,
         ) = super().compute_attitude()
         aux_state = super().compute_auxiliary()
-
         # drone to landing pad
         rotation = np.array(p.getMatrixFromQuaternion(quarternion)).reshape(3, 3)
         self.distance = lin_pos - self.landing_pad_position
@@ -154,14 +155,14 @@ class RocketLandingEnv(RocketBaseEnv):
         if self.angle_representation == 0:
             self.state = np.array(
                 [
-                    *self.ang_vel,
-                    *self.ang_pos,
-                    *self.lin_vel,
-                    *lin_pos,
-                    *self.action,
-                    *aux_state,
-                    self.landing_pad_contact,
-                    *rotated_distance,
+                    *self.ang_vel,  # 2
+                    *self.ang_pos,  # 5
+                    *self.lin_vel,  # 8
+                    *lin_pos,  # 11
+                    *self.action,  # 18
+                    *aux_state,  # 27
+                    self.landing_pad_contact,  # 28
+                    *rotated_distance,  # 31
                 ]
             )
         elif self.angle_representation == 1:
@@ -171,8 +172,8 @@ class RocketLandingEnv(RocketBaseEnv):
                     *quarternion,
                     *self.lin_vel,
                     *lin_pos,
-                    *self.action,
-                    *aux_state,
+                    *self.action, # 19
+                    *aux_state, 
                     self.landing_pad_contact,
                     *rotated_distance,
                 ]
@@ -188,42 +189,84 @@ class RocketLandingEnv(RocketBaseEnv):
         if not self.sparse_reward:
             # progress and distance to pad
             progress_to_pad = float(  # noqa
-                np.linalg.norm(self.previous_distance[:2])
-                - np.linalg.norm(self.distance[:2])
+                np.linalg.norm(self.previous_distance) - np.linalg.norm(self.distance)
             )
-            offset_to_pad = np.linalg.norm(self.distance[:2]) + 0.1  # noqa
-
-            # deceleration as long as we're still falling
-            deceleration_bonus = (  # noqa
-                max(
-                    (self.lin_vel[-1] < 0.0)
-                    * (self.lin_vel[-1] - self.previous_lin_vel[-1]),
-                    0.0,
-                )
-                / self.distance[-1]
-            )
-
+            offset_to_pad = np.linalg.norm(self.distance[:2])  # noqa
+            
+            ignite_bool = True if self.action[3] > 0.5 else False
             # composite reward together
+
+            ### 1st ###
+            # self.reward += (
+            #     + (0.2 * progress_to_pad)  # encourage progress to landing pad
+            #     - (0.5 * abs((ignite_bool * self.action[4]))) # Engine cost
+            #     - (0.5 * abs(self.action[0])) # force_x cost
+            #     - (0.5 * abs(self.action[1])) # force_y cost
+            #     - (0.5 * abs(self.action[5])) # booster_gimbal_1 cost
+            #     - (0.5 * abs(self.action[6])) # booster_gimbal_2 cost
+            #     - (0.5 * abs(self.ang_vel[-1])) # roll cost
+            # )
+
+            # if np.any(self.env.contact_array):
+            #     self.reward += 100.0 / (
+            #         (
+            #             0.0005
+            #             * ((20 * offset_to_pad) + (50 * np.linalg.norm(self.ang_pos[:2])))
+            #         )
+            #         + 0.01
+            #     )
+            #     self.reward += -5000
+            #     self.info["offset_to_pad"] = offset_to_pad
+            ### 1st ###
+
+            ### 2nd ###
             self.reward += (
-                -5.0  # negative offset to discourage staying in the air
-                + (2.0 / offset_to_pad)  # encourage being near the pad
-                + (100.0 * progress_to_pad)  # encourage progress to landing pad
-                -(1.0 * abs(self.ang_vel[-1]))  # minimize spinning
-                - (3.0 * np.linalg.norm(self.ang_pos[:2]))  # penalize aggressive angles
-                # + (5.0 * deceleration_bonus)  # reward deceleration when near pad
+                + (0.2 * progress_to_pad)  # encourage progress to landing pad
+                - (0.5 * abs((ignite_bool * self.action[4]))) # Engine cost
+                - (0.5 * abs(self.action[0])) # force_x cost
+                - (0.5 * abs(self.action[1])) # force_y cost
+                - (0.5 * abs(self.action[5])) # booster_gimbal_1 cost
+                - (0.5 * abs(self.action[6])) # booster_gimbal_2 cost
+                - (0.5 * abs(self.ang_vel[-1])) # roll cost
             )
 
-                # -5.0  # negative offset to discourage staying in the air
-                # + (2.0 / offset_to_pad)  # encourage being near the pad
-                # + (100.0 * progress_to_pad)  # encourage progress to landing pad
-                # -(1.0 * abs(self.ang_vel[-1]))  # minimize spinning
-                # - (1.0 * np.linalg.norm(self.ang_pos[:2]))  # penalize aggressive angles
-                # # + (5.0 * deceleration_bonus)  # reward deceleration when near pad
+            if np.any(self.env.contact_array):
+                self.reward += 100.0 / (
+                    (
+                        0.0005
+                        * ((20 * offset_to_pad) + (50 * np.linalg.norm(self.ang_pos[:2])))
+                    )
+                    + 0.01
+                )
+                self.reward += -5000
+                self.info["offset_to_pad"] = offset_to_pad
+                # print(f"Offset to pad:{offset_to_pad}, Velocity:{np.linalg.norm(self.previous_lin_vel)}, Angle:{np.linalg.norm(self.ang_pos[:2])}")
+            ### 2nd ###
+
+        ### BASELINE ###
+        #     self.reward += (
+        #         + (0.2 * progress_to_pad)  # encourage progress to landing pad
+        #         - (0.5 * abs((self.action[3] * self.action[4]))) # Engine cost
+        #         - (0.5 * abs(self.action[0])) # force_x cost
+        #         - (0.5 * abs(self.action[1])) # force_y cost
+        #         - (0.5 * abs(self.action[5])) # booster_gimbal_1 cost
+        #         - (0.5 * abs(self.action[6])) # booster_gimbal_2 cost
+        #         - (0.5 * abs(self.ang_vel[-1])) # roll cost
+        #     )
+
+        # if np.any(self.env.contact_array):
+        #     self.reward += (100.0 / ((0.0005 * (offset_to_pad
+        #                                         + (50 * np.linalg.norm(self.ang_pos[:2])))) + 0.01))
+        #     self.info["offset_to_pad"] = offset_to_pad
+        ### BASELINE ###
+
+        # print(f"Throttle:{ignite_bool * self.action[4]}, Fuel:{self.state[25]}")
 
         # check if we touched the landing pad
         if self.env.contact_array[self.env.drones[0].Id, self.landing_pad_id]:
             self.landing_pad_contact = 1.0
-            self.reward += 20
+            if np.linalg.norm(self.ang_pos[:2]) < 0.1:
+                self.info["upright"] = 1
         else:
             self.landing_pad_contact = 0.0
             return
@@ -247,7 +290,8 @@ class RocketLandingEnv(RocketBaseEnv):
             and np.linalg.norm(self.previous_lin_vel) < 0.02
             and np.linalg.norm(self.ang_pos[:2]) < 0.1
         ):
-            self.reward += 500.0
+            self.reward += 5000.0
             self.info["env_complete"] = True
+            print("Landed!")
             self.termination |= True
             return

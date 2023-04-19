@@ -136,7 +136,7 @@ class Boosters:
         return np.concatenate(
             [
                 self.ignition_state.flatten(),  # [n]
-                self.ratio_fuel_remaining.flatten(),  # [n]
+                (self.ratio_fuel_remaining.flatten() * 100),  # [n]
                 self.throttle.flatten(),  # [n]
             ]
         )
@@ -167,6 +167,13 @@ class Boosters:
                 3,
                 3,
             ), f"`rotation` should be of shape (num_boosters, 3, 3), got {rotation.shape}"
+
+        # for ignite, visual_id in zip(ignition, self.booster_ids):
+        #     self.p.changeVisualShape(
+        #         self.uav_id,
+        #         linkIndex=visual_id,
+        #         rgbaColor=(float(ignite), 0, 0, 1),
+        #     )
 
         # compute thrust mass inertia
         (thrust, mass, inertia) = self._compute_thrust_mass_inertia(ignition, pwm)

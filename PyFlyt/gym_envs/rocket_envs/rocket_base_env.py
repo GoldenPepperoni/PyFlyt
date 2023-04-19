@@ -158,6 +158,8 @@ class RocketBaseEnv(gymnasium.Env):
         self.info["out_of_bounds"] = False
         self.info["fatal_collision"] = False
         self.info["env_complete"] = False
+        self.info["offset_to_pad"] = 999.99
+        self.info["upright"] = 0
 
         # override the spawn location if needed
         if "randomize_drop" in options and options["randomize_drop"]:
@@ -317,6 +319,7 @@ class RocketBaseEnv(gymnasium.Env):
 
         # increment step count
         self.step_count += 1
+        # print(self.reward)
 
         return self.state, self.reward, self.termination, self.truncation, self.info
 
