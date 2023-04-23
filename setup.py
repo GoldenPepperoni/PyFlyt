@@ -19,5 +19,6 @@ def package_files(directory):
 
 setup(
     name="PyFlyt",
+    include_package_data=True,
     package_data={"PyFlyt": package_files("PyFlyt/models/")},
 )
