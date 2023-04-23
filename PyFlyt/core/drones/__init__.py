@@ -2,3 +2,4 @@
 from .fixedwing import Fixedwing
 from .quadx import QuadX
 from .rocket import Rocket
+from .revtriplane import Revtriplane

@@ -12,7 +12,7 @@ import pybullet_data
 from pybullet_utils import bullet_client
 
 from .abstractions import DroneClass
-from .drones import Fixedwing, QuadX, Rocket
+from .drones import Fixedwing, QuadX, Rocket, Revtriplane
 
 DroneIndex = int
 
@@ -109,6 +109,7 @@ class Aviary(bullet_client.BulletClient):
         self.drone_type_mappings["quadx"] = QuadX
         self.drone_type_mappings["fixedwing"] = Fixedwing
         self.drone_type_mappings["rocket"] = Rocket
+        self.drone_type_mappings["revtriplane"] = Revtriplane
         if drone_type_mappings is not None:
             self.drone_type_mappings = {
                 **self.drone_type_mappings,

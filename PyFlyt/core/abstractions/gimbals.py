@@ -159,13 +159,17 @@ class Gimbals:
         # https://math.stackexchange.com/questions/142821/matrix-for-rotation-around-a-vector
         rotation1 = (
             np.eye(3)
-            + np.sin(gimbal_angles[:, 0]) * self.w1
-            + 2 * (np.sin(gimbal_angles[:, 0]) ** 2) * self.w1_squared
+            + np.expand_dims(np.sin(gimbal_angles[:, 0]), axis=(1, 2)) * self.w1
+            + 2
+            * (np.expand_dims(np.sin(gimbal_angles[:, 0]), axis=(1, 2)) ** 2)
+            * self.w1_squared
         )
         rotation2 = (
             np.eye(3)
-            + np.sin(gimbal_angles[:, 1]) * self.w2
-            + 2 * (np.sin(gimbal_angles[:, 1]) ** 2) * self.w2_squared
+            + np.expand_dims(np.sin(gimbal_angles[:, 1]), axis=(1, 2)) * self.w2
+            + 2
+            * (np.expand_dims(np.sin(gimbal_angles[:, 1]), axis=(1, 2)) ** 2)
+            * self.w2_squared
         )
 
         # get the final thrust vector

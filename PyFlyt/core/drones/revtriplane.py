@@ -8,6 +8,7 @@ from pybullet_utils import bullet_client
 from ..abstractions.base_drone import DroneClass
 from ..abstractions.camera import Camera
 from ..abstractions.lifting_surfaces import LiftingSurface, LiftingSurfaces
+from ..abstractions.gimbals import Gimbals
 from ..abstractions.motors import Motors
 
 
@@ -30,7 +31,7 @@ class Revtriplane(DroneClass):
         camera_FOV_degrees: int = 90,
         camera_resolution: tuple[int, int] = (128, 128),
         camera_position_offset: np.ndarray = np.array([-3.0, 0.0, 1.0]),
-        starting_velocity: np.ndarray = np.array([20.0, 0.0, 0.0]),
+        starting_velocity: np.ndarray = np.array([0.0, 0.0, 0.0]),
     ):
         """Creates a Revtriplane UAV and handles all relevant control and physics.
 
@@ -78,7 +79,7 @@ class Revtriplane(DroneClass):
                     physics_period=self.physics_period,
                     np_random=self.np_random,
                     uav_id=self.Id,
-                    surface_id=3,
+                    surface_id=5,
                     command_id=0,
                     command_sign=+1.0,
                     lifting_unit=np.array([0.0, 0.0, 1.0]),
@@ -92,7 +93,7 @@ class Revtriplane(DroneClass):
                     physics_period=self.physics_period,
                     np_random=self.np_random,
                     uav_id=self.Id,
-                    surface_id=4,
+                    surface_id=6,
                     command_id=0,
                     command_sign=-1.0,
                     lifting_unit=np.array([0.0, 0.0, 1.0]),
@@ -106,7 +107,7 @@ class Revtriplane(DroneClass):
                     physics_period=self.physics_period,
                     np_random=self.np_random,
                     uav_id=self.Id,
-                    surface_id=1,
+                    surface_id=3,
                     command_id=1,
                     command_sign=1.0,
                     lifting_unit=np.array([0.0, 0.0, 1.0]),
@@ -120,7 +121,7 @@ class Revtriplane(DroneClass):
                     physics_period=self.physics_period,
                     np_random=self.np_random,
                     uav_id=self.Id,
-                    surface_id=5,
+                    surface_id=7,
                     command_id=None,
                     command_sign=+1.0,
                     lifting_unit=np.array([0.0, 0.0, 1.0]),
@@ -134,7 +135,7 @@ class Revtriplane(DroneClass):
                     physics_period=self.physics_period,
                     np_random=self.np_random,
                     uav_id=self.Id,
-                    surface_id=2,
+                    surface_id=4,
                     command_id=2,
                     command_sign=-1.0,
                     lifting_unit=np.array([0.0, 1.0, 0.0]),
@@ -144,17 +145,17 @@ class Revtriplane(DroneClass):
             )
             self.lifting_surfaces = LiftingSurfaces(lifting_surfaces=surfaces)
 
-            # motor
-            motor_params = all_params["motor_params"]
-            tau = np.array([motor_params["tau"]])
+            # front motor
+            front_motor_params = all_params["front_motor_params"]
+            tau = np.array([front_motor_params["tau"]])
             max_rpm = np.array([1.0]) * np.sqrt(
-                (motor_params["total_thrust"]) / motor_params["thrust_coef"]
+                (front_motor_params["total_thrust"]) / front_motor_params["thrust_coef"]
             )
-            thrust_coef = np.array([motor_params["thrust_coef"]])
-            torque_coef = np.array([motor_params["torque_coef"]])
-            thrust_unit = np.array([[1.0, 0.0, 0.0]])
-            noise_ratio = np.array([motor_params["noise_ratio"]])
-            self.motors = Motors(
+            thrust_coef = np.array([front_motor_params["thrust_coef"]])
+            torque_coef = np.array([front_motor_params["torque_coef"]])
+            thrust_unit = np.array([[0.0, 0.0, 1.0]])
+            noise_ratio = np.array([front_motor_params["noise_ratio"]])
+            self.front_motor = Motors(
                 p=self.p,
                 physics_period=self.physics_period,
                 np_random=self.np_random,
@@ -166,6 +167,64 @@ class Revtriplane(DroneClass):
                 torque_coef=torque_coef,
                 thrust_unit=thrust_unit,
                 noise_ratio=noise_ratio,
+            )
+
+            # rear motors
+            motor_ids = [1, 2]
+            rear_motor_params = all_params["rear_motor_params"]
+            thrust_coef = np.array([rear_motor_params["thrust_coef"]] * 2)
+            torque_coef = np.array(
+                [
+                    -rear_motor_params["torque_coef"],
+                    +rear_motor_params["torque_coef"],
+                ]
+            )
+            thrust_unit = np.array(
+                [
+                    [0.0, 0.0, 1.0],
+                    [0.0, 0.0, 1.0],
+                ]
+            )
+            noise_ratio = np.array([1.0] * 2) * rear_motor_params["noise_ratio"]
+            max_rpm = np.array([1.0] * 2) * np.sqrt(
+                (rear_motor_params["total_thrust"])
+                / (2 * rear_motor_params["thrust_coef"])
+            )
+            tau = np.array([1.0] * 2) * rear_motor_params["tau"]
+            self.rear_motors = Motors(
+                p=self.p,
+                physics_period=self.physics_period,
+                np_random=self.np_random,
+                uav_id=self.Id,
+                motor_ids=motor_ids,
+                tau=tau,
+                max_rpm=max_rpm,
+                thrust_coef=thrust_coef,
+                torque_coef=torque_coef,
+                thrust_unit=thrust_unit,
+                noise_ratio=noise_ratio,
+            )
+
+            # add the gimbal for front motor
+            self.front_motor_gimbal = Gimbals(
+                p=self.p,
+                physics_period=self.physics_period,
+                np_random=self.np_random,
+                gimbal_unit_1=np.array([[1.0, 0.0, 0.0]]),
+                gimbal_unit_2=np.array([[0.0, 1.0, 0.0]]),
+                gimbal_tau=np.array([0.01]),
+                gimbal_range_degrees=np.array([[0, 90]]),
+            )
+
+            # add the gimbal for rear motors
+            self.rear_motors_gimbals = Gimbals(
+                p=self.p,
+                physics_period=self.physics_period,
+                np_random=self.np_random,
+                gimbal_unit_1=np.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
+                gimbal_unit_2=np.array([[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]]),
+                gimbal_tau=np.array([0.01, 0.01]),
+                gimbal_range_degrees=np.array([[0, 5], [0, 5]]),
             )
 
         """ CAMERA """
@@ -186,20 +245,45 @@ class Revtriplane(DroneClass):
     def reset(self):
         """Resets the vehicle to the initial state."""
         self.set_mode(0)
-        self.setpoint = np.zeros(4)
-        self.cmd = np.zeros(4)
+        self.setpoint = np.zeros(9)
+        self.cmd = np.zeros(9)
 
         self.p.resetBasePositionAndOrientation(self.Id, self.start_pos, self.start_orn)
         self.p.resetBaseVelocity(self.Id, self.starting_velocity, [0, 0, 0])
         self.disable_artificial_damping()
         self.lifting_surfaces.reset()
-        self.motors.reset()
+        self.front_motor.reset()
+        self.rear_motors.reset()
+        self.front_motor_gimbal.reset()
+        self.rear_motors_gimbals.reset()
 
     def update_control(self):
         """Runs through controllers."""
         # the default mode
         if self.mode == 0:
-            self.cmd = self.setpoint
+            self.cmd = self.setpoint.copy()
+
+            # convert pwm to normalised input for lifting surfaces
+            self.cmd[0:4] = self.pwm2cmd(
+                pwm=np.array(self.setpoint[0:4]),
+                pwmrange=np.array([1000, 2000]),
+                cmdrange=np.array([-1, 1]),
+            )
+
+            # convert pwm to normalised input for front motor gimbal
+            self.cmd[6] = self.pwm2cmd(
+                pwm=np.array(self.setpoint[6]),
+                pwmrange=np.array([1500, 2000]),
+                cmdrange=np.array([0, 1]),
+            )
+
+            # convert pwm to normalised input for rear motors gimbals
+            self.cmd[4:6] = self.pwm2cmd(
+                pwm=np.array([self.setpoint[4], self.setpoint[5]]),
+                pwmrange=np.array([1000, 2000]),
+                cmdrange=np.array([-1, 1]),
+            )
+
             return
 
         # otherwise, check that we have a custom controller
@@ -213,10 +297,29 @@ class Revtriplane(DroneClass):
 
     def update_physics(self):
         """Updates the physics of the vehicle."""
-        assert self.cmd[3] >= 0.0, f"thrust `{self.cmd[3]}` must be more than 0.0."
+        assert self.cmd[7] >= 0.0, f"thrust `{self.cmd[7]}` must be more than 0.0."
 
+        # move the front motors gimbal
+        front_motor_rotation = self.front_motor_gimbal.compute_rotation(
+            np.array([0, self.cmd[6]])
+        )
+        # move the rear motors gimbal
+        rear_motors_rotation = self.rear_motors_gimbals.compute_rotation(
+            np.array([[0.0, self.cmd[4]], [0.0, self.cmd[5]]])
+        )
+
+        # front motor physics
+        self.front_motor.physics_update(
+            pwm=self.cmd[7], rotation=np.array(front_motor_rotation)
+        )
+        # rear motors physics
+        self.rear_motors.physics_update(
+            pwm=np.array([self.cmd[9], self.cmd[8]]),
+            rotation=np.array(rear_motors_rotation),
+        )
+
+        # lifting surface physics
         self.lifting_surfaces.physics_update(self.cmd)
-        self.motors.physics_update(self.cmd[[3]])
 
     def update_state(self):
         """Updates the current state of the UAV.
@@ -242,10 +345,25 @@ class Revtriplane(DroneClass):
 
         # update auxiliary information
         self.aux_state = np.concatenate(
-            (self.lifting_surfaces.get_states(), self.motors.get_states())
+            (
+                self.lifting_surfaces.get_states(),
+                self.front_motor.get_states(),
+                self.rear_motors.get_states(),
+            )
         )
 
     def update_last(self):
         """Updates things only at the end of `Aviary.step()`."""
         if self.use_camera:
             self.rgbaImg, self.depthImg, self.segImg = self.camera.capture_image()
+
+    def pwm2cmd(self, pwm: np.ndarray, pwmrange: np.ndarray, cmdrange: np.ndarray):
+        """Converts PWM input from ardupilot to normalised values in the given range
+        pwm: integer input (usually from 1000 to 2000)
+        pwmrange: [min, max] range of the pwm input
+        cmdrange: [min, max] range to linearly map the pwm input to
+        """
+
+        cmd = np.interp(pwm, pwmrange, cmdrange)
+
+        return cmd
