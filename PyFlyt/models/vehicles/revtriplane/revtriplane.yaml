@@ -1,12 +1,12 @@
 front_motor_params:
-  total_thrust: 30
+  total_thrust: 50
   thrust_coef: 3.16e-10
   torque_coef: 7.94e-12
   noise_ratio: 0.02
   tau: 0.01
 
 rear_motor_params:
-  total_thrust: 20
+  total_thrust: 30
   thrust_coef: 3.16e-10
   torque_coef: 7.94e-12
   noise_ratio: 0.02

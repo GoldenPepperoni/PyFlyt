@@ -94,8 +94,8 @@ class Revtriplane(DroneClass):
                     np_random=self.np_random,
                     uav_id=self.Id,
                     surface_id=6,
-                    command_id=0,
-                    command_sign=-1.0,
+                    command_id=1,
+                    command_sign=+1.0,
                     lifting_unit=np.array([0.0, 0.0, 1.0]),
                     forward_unit=np.array([1.0, 0.0, 0.0]),
                     **all_params["right_wing_flapped_params"],
@@ -108,7 +108,7 @@ class Revtriplane(DroneClass):
                     np_random=self.np_random,
                     uav_id=self.Id,
                     surface_id=3,
-                    command_id=1,
+                    command_id=2,
                     command_sign=1.0,
                     lifting_unit=np.array([0.0, 0.0, 1.0]),
                     forward_unit=np.array([1.0, 0.0, 0.0]),
@@ -136,7 +136,7 @@ class Revtriplane(DroneClass):
                     np_random=self.np_random,
                     uav_id=self.Id,
                     surface_id=4,
-                    command_id=2,
+                    command_id=3,
                     command_sign=-1.0,
                     lifting_unit=np.array([0.0, 1.0, 0.0]),
                     forward_unit=np.array([1.0, 0.0, 0.0]),
@@ -224,7 +224,7 @@ class Revtriplane(DroneClass):
                 gimbal_unit_1=np.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
                 gimbal_unit_2=np.array([[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]]),
                 gimbal_tau=np.array([0.01, 0.01]),
-                gimbal_range_degrees=np.array([[0, 5], [0, 5]]),
+                gimbal_range_degrees=np.array([[0, 10], [0, 10]]),
             )
 
         """ CAMERA """
@@ -257,33 +257,43 @@ class Revtriplane(DroneClass):
         self.front_motor_gimbal.reset()
         self.rear_motors_gimbals.reset()
 
+        # n = self.p.getNumJoints(self.Id)
+        # for i in range(n):
+        #     print(self.p.getJointInfo(self.Id, i))
+
     def update_control(self):
         """Runs through controllers."""
         # the default mode
         if self.mode == 0:
-            self.cmd = self.setpoint.copy()
-
             # convert pwm to normalised input for lifting surfaces
-            self.cmd[0:4] = self.pwm2cmd(
+            lifting_surfaces_cmds = self.pwm2cmd(
                 pwm=np.array(self.setpoint[0:4]),
                 pwmrange=np.array([1000, 2000]),
                 cmdrange=np.array([-1, 1]),
             )
 
             # convert pwm to normalised input for front motor gimbal
-            self.cmd[6] = self.pwm2cmd(
+            front_gimbal_cmd = self.pwm2cmd(
                 pwm=np.array(self.setpoint[6]),
-                pwmrange=np.array([1500, 2000]),
-                cmdrange=np.array([0, 1]),
+                pwmrange=np.array([1000, 2000]),
+                cmdrange=np.array([1, 0]), # Only allow tilt in 1 direction
             )
 
             # convert pwm to normalised input for rear motors gimbals
-            self.cmd[4:6] = self.pwm2cmd(
-                pwm=np.array([self.setpoint[4], self.setpoint[5]]),
+            rear_gimbals_cmds = self.pwm2cmd(
+                pwm=np.array(self.setpoint[4:6]),
                 pwmrange=np.array([1000, 2000]),
                 cmdrange=np.array([-1, 1]),
             )
 
+            # convert pwm to normalised input for motor cmd
+            motors_cmds = self.pwm2cmd(
+                pwm=np.array(self.setpoint[7:]),
+                pwmrange=np.array([1000, 2000]),
+                cmdrange=np.array([0, 1]), # Only allow positive thrust
+            )
+
+            self.cmd = np.array([*lifting_surfaces_cmds, *rear_gimbals_cmds, front_gimbal_cmd, *motors_cmds])
             return
 
         # otherwise, check that we have a custom controller
@@ -297,7 +307,6 @@ class Revtriplane(DroneClass):
 
     def update_physics(self):
         """Updates the physics of the vehicle."""
-        assert self.cmd[7] >= 0.0, f"thrust `{self.cmd[7]}` must be more than 0.0."
 
         # move the front motors gimbal
         front_motor_rotation = self.front_motor_gimbal.compute_rotation(
@@ -327,18 +336,18 @@ class Revtriplane(DroneClass):
         This includes: ang_vel, ang_pos, lin_vel, lin_pos.
         """
         lin_pos, ang_pos = self.p.getBasePositionAndOrientation(self.Id)
-        lin_vel, ang_vel = self.p.getBaseVelocity(self.Id)
+        body_vel, ang_vel = self.p.getBaseVelocity(self.Id)
 
         # express vels in local frame
         rotation = np.array(self.p.getMatrixFromQuaternion(ang_pos)).reshape(3, 3).T
-        lin_vel = np.matmul(rotation, lin_vel)
+        lin_vel = np.matmul(rotation, body_vel)
         ang_vel = np.matmul(rotation, ang_vel)
 
         # ang_pos in euler form
         ang_pos = self.p.getEulerFromQuaternion(ang_pos)
 
         # create the state
-        self.state = np.stack([ang_vel, ang_pos, lin_vel, lin_pos], axis=0)
+        self.state = np.stack([ang_vel, ang_pos, body_vel, lin_pos], axis=0)
 
         # update all lifting surface velocities
         self.lifting_surfaces.state_update(rotation)

@@ -36,7 +36,7 @@
     </collision>
   </link>
   <joint name="front_motor_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.57 0 0.1"/>
+    <origin rpy="0 0 0" xyz="0.57 0 0.0"/>
     <parent link="base_link"/>
     <child link="front_motor_link"/>
   </joint>
@@ -57,7 +57,7 @@
     </collision>
   </link>
   <joint name="left_motor_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="-0.19 0.405 0.1"/>
+    <origin rpy="0 0 0" xyz="-0.19 0.405 0.0"/>
     <parent link="base_link"/>
     <child link="left_motor_link"/>
   </joint>
@@ -78,7 +78,7 @@
     </collision>
   </link>
   <joint name="right_motor_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="-0.19 -0.405 0.1"/>
+    <origin rpy="0 0 0" xyz="-0.19 -0.405 0.0"/>
     <parent link="base_link"/>
     <child link="right_motor_link"/>
   </joint>
