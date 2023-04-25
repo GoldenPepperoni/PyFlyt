@@ -224,7 +224,7 @@ class Revtriplane(DroneClass):
                 gimbal_unit_1=np.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
                 gimbal_unit_2=np.array([[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]]),
                 gimbal_tau=np.array([0.01, 0.01]),
-                gimbal_range_degrees=np.array([[0, 10], [0, 10]]),
+                gimbal_range_degrees=np.array([[0, 20], [0, 20]]),
             )
 
         """ CAMERA """
